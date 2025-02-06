@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>TrenchScribe</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="code.js"></script>
+  </head>
+  <body>
+    <dialog>
+      <p>Copied!</p>
+    </dialog>
+    <div id="header">
+      <img src="images/title.png" />
+    </div>
+    <div id="content">
+      <div id="left">
+        <h1>Paste Army JSON HERE:</h1>
+        <textarea id="input"></textarea>
+      </div>
+      <div>
+        <div id="right">
+          <h2>TTS Output: <span id="index"></span></h2>
+          <textarea id="output" readonly></textarea>
+        </div>
+      </div>
+      <div class="buttons">
+        <button id="copyTitleButton" disabled>Copy Title</button>
+        <button id="copyDescButton" disabled>Copy Desc</button>
+      </div>
+      <div class="buttons">
+        <button id="prevButton" disabled>Prev</button>
+        <button id="nextButton" disabled>Next</button>
+      </div>
+    </div>
+  </body>
+</html>

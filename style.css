@@ -1,0 +1,68 @@
+body {
+  background-image: url("images/background.webp");
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: white;
+  text-shadow: maroon 1px 0 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 auto;
+}
+
+#right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+img {
+  width: 100%;
+  height: auto;
+}
+textarea {
+  width: 300px;
+  height: 100px;
+}
+
+textarea.dragover {
+  border-color: #4caf50;
+  background-color: #f0fff0;
+}
+
+#output {
+  background-color: grey;
+}
+
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 5px;
+}
+
+button {
+  width: 50%;
+}
+
+dialog {
+    background-color: none;
+    border-radius: 100px;
+}
