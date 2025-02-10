@@ -63,6 +63,20 @@ button {
 }
 
 dialog {
-    background-color: none;
-    border-radius: 100px;
+  background-color: none;
+  border-radius: 100px;
+}
+
+.space-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+#ducants {
+  color: silver;
+}
+
+#glory {
+  color: gold;
 }

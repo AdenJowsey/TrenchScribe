@@ -3,6 +3,8 @@ class Model {
   modelName = "";
   isElite = false;
   isTough = false;
+  isGlory = false;
+  isEncumbered = false;
   movement = 0;
   ranged = 0;
   melee = 0;
@@ -27,6 +29,7 @@ class RangedWeapon {
   hands = 0;
   keywords = [];
   modifiers = [];
+  isGlory = false;
 }
 
 class MeleeWeapon {
@@ -34,16 +37,19 @@ class MeleeWeapon {
   hands = 0;
   keywords = [];
   modifiers = [];
+  isGlory = false;
 }
 
 class Armour {
   name = "";
   effect = 0;
+  isGlory = false;
 }
 
 class Equipment {
   name = "";
   description = "";
+  isGlory = false;
 }
 
 window.addEventListener("load", function () {
@@ -56,6 +62,8 @@ window.addEventListener("load", function () {
   const copyDescButton = document.getElementById("copyDescButton");
   const dialog = document.querySelector("dialog");
   const indexElement = document.getElementById("index");
+  const ducantElement = document.getElementById("ducants");
+  const glortyElement = document.getElementById("glory");
   indexElement.innerText = `-/-`;
 
   let membersArray = [];
@@ -123,6 +131,8 @@ window.addEventListener("load", function () {
   });
 
   function update() {
+    let ducCost = 0;
+    let gloryCost = 0;
     membersArray = [];
     indexElement.innerText = `-/-`;
     index = 0;
@@ -176,6 +186,10 @@ window.addEventListener("load", function () {
       member.name = model.Name ?? member.name;
       member.isElite = model.Elite ?? member.isElite;
 
+      member.isGlory = model.Model?.CostType === "glory";
+      member.isGlory
+        ? (gloryCost += model.Model?.Cost ?? 0)
+        : (ducCost += model.Model?.Cost ?? 0);
       if (model.Model?.Object) {
         const modelObject = model.Model.Object;
         member.modelName = modelObject.Name ?? member.modelName;
@@ -198,6 +212,7 @@ window.addEventListener("load", function () {
 
       model.Upgrades?.forEach((upgrade) => {
         const up = new Upgrade();
+        ducCost += upgrade.Cost ?? 0;
         up.name = upgrade.Name ?? up.name;
         up.description = upgrade.Description?.[0]?.Content ?? up.description;
         member.upgrades.push(up);
@@ -216,6 +231,8 @@ window.addEventListener("load", function () {
         }
       });
 
+      let hasHeavy = false;
+
       model.Equipment.forEach((equip) => {
         if (!equip?.Object) {
           console.warn("Equipment Object not found", equip);
@@ -227,9 +244,16 @@ window.addEventListener("load", function () {
             const ranged = new RangedWeapon();
             ranged.name = equip.Object.Name ?? ranged.name;
             ranged.range = equip.Object.Range ?? ranged.range;
+            ranged.isGlory = equip.CostType === "glory";
+            ranged.isGlory
+              ? (gloryCost += equip.Cost ?? 0)
+              : (ducCost += equip.Cost ?? 0);
             ranged.hands = equip.Object.EquipType?.charAt(0) ?? ranged.hands;
             equip.Object.Tags?.forEach((tag) => {
               ranged.keywords.push(tag?.tag_name);
+              if (tag?.tag_name === "Heavy") {
+                hasHeavy = true;
+              }
             });
             equip.Object.Modifiers?.forEach((mod) => {
               ranged.modifiers.push(mod);
@@ -239,9 +263,16 @@ window.addEventListener("load", function () {
           case "melee":
             const melee = new MeleeWeapon();
             melee.name = equip.Object.Name ?? melee.name;
+            melee.isGlory = equip.CostType === "glory";
+            melee.isGlory
+              ? (gloryCost += equip.Cost ?? 0)
+              : (ducCost += equip.Cost ?? 0);
             melee.hands = equip.Object.EquipType?.charAt(0) ?? melee.hands;
             equip.Object.Tags?.forEach((tag) => {
               melee.keywords.push(tag?.tag_name);
+              if (tag?.tag_name === "Heavy") {
+                hasHeavy = true;
+              }
             });
             equip.Object.Modifiers?.forEach((mod) => {
               melee.modifiers.push(mod);
@@ -252,12 +283,20 @@ window.addEventListener("load", function () {
             const armour = new Armour();
             armour.name = equip.Object.Name ?? armour.name;
             armour.effect = equip.Object.EventTags?.armour ?? armour.effect;
+            armour.isGlory = equip.CostType === "glory";
+            armour.isGlory
+              ? (gloryCost += equip.Cost ?? 0)
+              : (ducCost += equip.Cost ?? 0);
             member.armours.push(armour);
             member.armour += armour.effect;
             break;
           case "equipment":
             const equipment = new Equipment();
             equipment.name = equip.Object.Name ?? equipment.name;
+            equipment.isGlory = equip.CostType === "glory";
+            equipment.isGlory
+              ? (gloryCost += equip.Cost ?? 0)
+              : (ducCost += equip.Cost ?? 0);
             equipment.description =
               equip.Object.Description?.[0]?.SubContent?.[0]?.Content ??
               equipment.description;
@@ -268,12 +307,22 @@ window.addEventListener("load", function () {
         }
       });
 
+      if (hasHeavy && !member.keywords.includes("STRONG")) {
+        member.isEncumbered = true;
+      }
       membersArray.push(member);
     });
     if (membersArray.length > 1 && nextButton) {
       nextButton.disabled = false;
-      indexElement.innerText = `0/${membersArray.length}`;
+      indexElement.innerText = `1/${membersArray.length}`;
     }
+    if (ducantElement) {
+      ducantElement.innerText = ducCost;
+    }
+    if (glortyElement) {
+      glortyElement.innerText = gloryCost;
+    }
+
     if (membersArray.length > 0) {
       render();
     }
@@ -292,15 +341,18 @@ window.addEventListener("load", function () {
 
     let outputString = "";
     outputString += `TITLE:\n`;
-    if (member.name !== member.modelName) {
-      outputString += `${member.isTough ? "[00ff00][T][-] " : ""}${
-        member.isElite ? "[FFD700]" + member.name + "[-]" : member.name
-      } - (${member.modelName})\n\n`;
-    } else {
-      outputString += `${member.isTough ? "[00ff00][T][-] " : ""}${
-        member.isElite ? "[FFD700]" + member.name + "[-]" : member.name
-      }\n\n`;
-    }
+    const nameColour = member.isGlory
+      ? "[FFD700]"
+      : member.isElite
+      ? "[ff9900]"
+      : "";
+
+    outputString += `${member.isTough ? "[00ff00][T][-] " : ""}${
+      nameColour + member.name + "[-]"
+    }${
+      member.name !== member.modelName ? " - (" + member.modelName + ")" : ""
+    }${member.isEncumbered ? " [cc3300][Encumbered][-]" : ""}\n\n`;
+
     outputString += `DESCRIPTION:\n`;
     outputString += `[b]Mo  Ra  Me  Ar[/b]\n`;
     const movementSpacing = member.movement < 10 ? " " : "";
@@ -311,7 +363,9 @@ window.addEventListener("load", function () {
     if (member.rangedWeapons.length > 0) {
       outputString += `[0099ff]Ranged Weapons:[-]\n`;
       member.rangedWeapons.forEach((ranged) => {
-        outputString += `${ranged.name} - ${ranged.range} - ${ranged.hands}H\n`;
+        outputString += `•${
+          ranged.isGlory ? "[FFD700]" + ranged.name + "[-]" : ranged.name
+        } - ${ranged.range} - ${ranged.hands}H\n`;
         ranged.modifiers.forEach((mod) => {
           outputString += `[i]${mod}[/i]\n`;
         });
@@ -322,7 +376,9 @@ window.addEventListener("load", function () {
     if (member.meleeWeapons.length > 0) {
       outputString += `[ff9933]Melee Weapons:[-]\n`;
       member.meleeWeapons.forEach((melee) => {
-        outputString += `${melee.name} - ${melee.hands}H\n`;
+        outputString += `•${
+          melee.isGlory ? "[FFD700]" + melee.name + "[-]" : melee.name
+        } - ${melee.hands}H\n`;
         melee.modifiers.forEach((mod) => {
           outputString += `[i]${mod}[/i]\n`;
         });
@@ -340,21 +396,25 @@ window.addEventListener("load", function () {
     if (member.equipment.length > 0) {
       outputString += `[ffff66]Equipment:[-]\n`;
       member.equipment.forEach((equip) => {
-        outputString += `${equip.name}: [i]${equip.description}[/i]\n`;
+        outputString += `•${
+          equip.isGlory ? "[FFD700]" + equip.name + "[-]" : equip.name
+        }: [i]${equip.description}[/i]\n`;
       });
       outputString += `\n`;
     }
     if (member.armours.length > 0) {
       outputString += `[996633]Armours:[-]\n`;
       member.armours.forEach((armour) => {
-        outputString += `${armour.name}: ${armour.effect}\n`;
+        outputString += `•${
+          armour.isGlory ? "[FFD700]" + armour.name + "[-]" : armour.name
+        }: ${armour.effect}\n`;
       });
       outputString += `\n`;
     }
     if (member.upgrades.length > 0) {
       outputString += `[00cc00]Upgrades:[-]\n`;
       member.upgrades.forEach((up) => {
-        outputString += `${up.name}: [i]${up.description}[/i]\n`;
+        outputString += `•${up.name}: [i]${up.description}[/i]\n`;
       });
       outputString += `\n`;
     }
